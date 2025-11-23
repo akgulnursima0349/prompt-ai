@@ -1,0 +1,185 @@
+// Prisma Schema for PromptAI
+// Database: SQLite (dev) / PostgreSQL (production)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== AUTH MODELS ====================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  password      String?   // For credentials auth
+
+  // Subscription & Plan
+  plan          String    @default("free")
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  apis          GeneratedAPI[]
+  usageLogs     UsageLog[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==================== API MODELS ====================
+
+model GeneratedAPI {
+  id            String    @id @default(cuid())
+  userId        String
+
+  // Basic Info
+  name          String
+  description   String
+  slug          String    @unique
+
+  // Prompts
+  userPrompt    String    // Original user prompt
+  systemPrompt  String    // Generated system prompt
+
+  // Configuration (stored as JSON)
+  configuration String    // JSON: model, temperature, maxTokens, etc.
+  inputSchema   String    // JSON Schema for input
+  outputSchema  String    // JSON Schema for output
+
+  // Status
+  status        String    @default("draft") // draft, configuring, active, paused, error
+
+  // Usage Tracking
+  usageCount    Int       @default(0)
+  lastUsedAt    DateTime?
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiKeys       APIKey[]
+  usageLogs     UsageLog[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([slug])
+}
+
+model APIKey {
+  id          String    @id @default(cuid())
+  apiId       String
+
+  // Key Info
+  key         String    @unique
+  keyHash     String    // Hashed version for security
+  name        String    @default("Default Key")
+
+  // Status
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime?
+
+  // Usage
+  usageCount  Int       @default(0)
+  lastUsedAt  DateTime?
+
+  // Relations
+  api         GeneratedAPI @relation(fields: [apiId], references: [id], onDelete: Cascade)
+  usageLogs   UsageLog[]
+
+  createdAt   DateTime  @default(now())
+
+  @@index([apiId])
+  @@index([key])
+  @@index([keyHash])
+}
+
+// ==================== USAGE & ANALYTICS ====================
+
+model UsageLog {
+  id            String   @id @default(cuid())
+  apiId         String
+  apiKeyId      String?
+  userId        String
+
+  // Request Info
+  requestBody   String?  // JSON
+  responseBody  String?  // JSON
+
+  // Metrics
+  statusCode    Int
+  latencyMs     Int
+  promptTokens  Int      @default(0)
+  completionTokens Int   @default(0)
+  totalTokens   Int      @default(0)
+
+  // Error Info
+  errorMessage  String?
+
+  // Relations
+  api           GeneratedAPI @relation(fields: [apiId], references: [id], onDelete: Cascade)
+  apiKey        APIKey?      @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+
+  @@index([apiId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ==================== RATE LIMITING ====================
+
+model RateLimitEntry {
+  id         String   @id @default(cuid())
+  identifier String   // API Key or IP
+  window     String   // minute, hour, day
+  count      Int      @default(0)
+  expiresAt  DateTime
+
+  @@unique([identifier, window])
+  @@index([expiresAt])
+}
