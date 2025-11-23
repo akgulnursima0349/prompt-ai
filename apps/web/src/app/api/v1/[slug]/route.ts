@@ -149,7 +149,7 @@ export async function POST(
         data: {
           apiId: api.id,
           apiKeyId: apiKeyRecord.id,
-          userId: api.user.id,
+          userId: api.userId,
           requestBody: JSON.stringify(body),
           responseBody: JSON.stringify(output),
           statusCode: 200,
@@ -176,7 +176,7 @@ export async function POST(
         data: {
           apiId: api.id,
           apiKeyId: apiKeyRecord.id,
-          userId: api.user.id,
+          userId: api.userId,
           statusCode: 500,
           latencyMs: latency,
           errorMessage,

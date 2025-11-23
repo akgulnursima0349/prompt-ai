@@ -8,6 +8,17 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Code, MoreVertical, Copy, Trash2, Pause, Play } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils';
 
+interface ApiWithRelations {
+  id: string;
+  name: string;
+  description: string;
+  slug: string;
+  status: string;
+  createdAt: Date;
+  apiKeys: { id: string; key: string }[];
+  _count: { usageLogs: number };
+}
+
 async function getApis(userId: string) {
   return prisma.generatedAPI.findMany({
     where: { userId },
@@ -69,7 +80,7 @@ export default async function ApisPage() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {apis.map((api) => (
+          {apis.map((api: ApiWithRelations) => (
             <Card key={api.id} className="group relative overflow-hidden">
               <CardHeader>
                 <div className="flex items-start justify-between">
