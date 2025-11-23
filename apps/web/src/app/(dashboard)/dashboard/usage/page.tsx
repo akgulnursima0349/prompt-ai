@@ -6,6 +6,21 @@ import { Badge } from '@/components/ui/badge';
 import { BarChart3, TrendingUp, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils';
 
+interface UsageLog {
+  id: string;
+  statusCode: number;
+  latencyMs: number;
+  createdAt: Date;
+  api: { name: string; slug: string };
+}
+
+interface ApiStat {
+  id: string;
+  name: string;
+  usageCount: number;
+  _count: { usageLogs: number };
+}
+
 async function getUsageStats(userId: string) {
   const [totalRequests, successfulRequests, recentLogs, apiStats] = await Promise.all([
     prisma.usageLog.count({ where: { userId } }),
@@ -126,7 +141,7 @@ export default async function UsagePage() {
               </p>
             ) : (
               <div className="space-y-4">
-                {stats.apiStats.map((api, index) => (
+                {stats.apiStats.map((api: ApiStat, index: number) => (
                   <div key={api.id} className="flex items-center gap-4">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-sm font-medium">
                       {index + 1}
@@ -165,7 +180,7 @@ export default async function UsagePage() {
               </p>
             ) : (
               <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                {stats.recentLogs.map((log) => (
+                {stats.recentLogs.map((log: UsageLog) => (
                   <div
                     key={log.id}
                     className="flex items-center justify-between rounded-lg border p-3"

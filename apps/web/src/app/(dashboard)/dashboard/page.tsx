@@ -7,6 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Code, Key, BarChart3, ArrowRight, Plus, Zap } from 'lucide-react';
 
+interface DashboardApi {
+  id: string;
+  name: string;
+  description: string;
+  status: string;
+  usageCount: number;
+  apiKeys: { id: string }[];
+}
+
 async function getDashboardData(userId: string) {
   const [apis, totalUsage] = await Promise.all([
     prisma.generatedAPI.findMany({
@@ -148,7 +157,7 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {apis.map((api) => (
+                {apis.map((api: DashboardApi) => (
                   <Link
                     key={api.id}
                     href={`/dashboard/apis/${api.id}`}

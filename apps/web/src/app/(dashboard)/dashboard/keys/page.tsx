@@ -7,6 +7,23 @@ import { Badge } from '@/components/ui/badge';
 import { Key, Copy, Trash2, Plus, Clock } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils';
 
+interface ApiKey {
+  id: string;
+  key: string;
+  name: string;
+  isActive: boolean;
+  createdAt: Date;
+  lastUsedAt: Date | null;
+  usageCount: number;
+}
+
+interface ApiWithKeys {
+  id: string;
+  name: string;
+  slug: string;
+  apiKeys: ApiKey[];
+}
+
 async function getApiKeys(userId: string) {
   const apis = await prisma.generatedAPI.findMany({
     where: { userId },
@@ -17,8 +34,8 @@ async function getApiKeys(userId: string) {
     },
   });
 
-  return apis.flatMap((api) =>
-    api.apiKeys.map((key) => ({
+  return (apis as ApiWithKeys[]).flatMap((api: ApiWithKeys) =>
+    api.apiKeys.map((key: ApiKey) => ({
       ...key,
       apiName: api.name,
       apiSlug: api.slug,
