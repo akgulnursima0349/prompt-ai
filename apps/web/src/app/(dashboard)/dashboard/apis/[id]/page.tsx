@@ -177,7 +177,7 @@ export default async function ApiDetailPage({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {api.apiKeys.map((key) => (
+            {api.apiKeys.map((key: { id: string; name: string; key: string; isActive: boolean }) => (
               <div
                 key={key.id}
                 className="flex items-center justify-between rounded-lg border p-3"
