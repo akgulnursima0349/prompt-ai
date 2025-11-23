@@ -33,8 +33,8 @@ async function getDashboardData(userId: string) {
     }),
   ]);
 
-  const activeApis = apis.filter((api) => api.status === 'active').length;
-  const totalKeys = apis.reduce((acc, api) => acc + api.apiKeys.length, 0);
+  const activeApis = apis.filter((api: DashboardApi) => api.status === 'active').length;
+  const totalKeys = apis.reduce((acc: number, api: DashboardApi) => acc + api.apiKeys.length, 0);
 
   return { apis, activeApis, totalKeys, totalUsage };
 }
